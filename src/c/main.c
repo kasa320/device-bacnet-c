@@ -205,6 +205,7 @@ static BACNET_OBJECT_TYPE parseType (const iot_data_t *type, iot_data_t **exc)
     }
     if (*exc == NULL)
     {
+      fprintf (stderr, "Unknown BACnet type name: [%s]\n", str);
       *exc = iot_data_alloc_string ("Unknown BACnet type name", IOT_DATA_REF);
     }
     return 0;
