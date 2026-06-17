@@ -1,0 +1,23 @@
+Writable:
+  LogLevel: INFO
+  Device:
+    Discovery:
+      Enabled: true
+
+Service:
+  Host: localhost
+  Port: 59980
+  StartupMsg: "BACnet device service started"
+
+Device:
+  ProfilesDir: "./res/profiles"
+  DevicesDir: "./res/devices"
+
+Driver:
+#  BBMD_ADDRESS: "10.100.22.243"
+#  BBMD_PORT: 47809
+  DefaultDevicePath: "/dev/ttyUSB0"
+
+MessageBus:
+  Optional:
+    ClientId: device-bacnet
