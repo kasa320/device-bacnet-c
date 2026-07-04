@@ -576,6 +576,41 @@ write_access_data_populate (BACNET_WRITE_ACCESS_DATA **head, uint32_t nvalues,
         write_access_data_free (*head);
         return false;
     }
+    /*
+     * Binary 系オブジェクト (BINARY_INPUT/OUTPUT/VALUE) の Present_Value は
+     * BACnet 仕様上 BACnetBinaryPV 列挙型 (ワイヤ上は ENUMERATED タグ)。
+     * EdgeX 側の値型 (Bool → BOOLEAN / Uint* → UNSIGNED_INT) のままだと
+     * 仕様準拠デバイスが Error PDU で書き込みを拒否するため、ここで
+     * ENUMERATED タグに補正する (0=inactive / 1=active)。
+     * analog 系 (REAL) や multistate 系 (UNSIGNED_INT) はそのまま。
+     */
+    if (attrs->type == OBJECT_BINARY_INPUT ||
+        attrs->type == OBJECT_BINARY_OUTPUT ||
+        attrs->type == OBJECT_BINARY_VALUE)
+    {
+      uint32_t enum_val = 0;
+      switch (value.tag)
+      {
+        case BACNET_APPLICATION_TAG_BOOLEAN:
+          enum_val = value.type.Boolean ? 1 : 0;
+          break;
+        case BACNET_APPLICATION_TAG_UNSIGNED_INT:
+          enum_val = value.type.Unsigned_Int ? 1 : 0;
+          break;
+        case BACNET_APPLICATION_TAG_SIGNED_INT:
+          enum_val = value.type.Signed_Int ? 1 : 0;
+          break;
+        default:
+          enum_val = 0;
+          break;
+      }
+      value.tag = BACNET_APPLICATION_TAG_ENUMERATED;
+      value.type.Enumerated = enum_val;
+      iot_log_debug (driver->lc,
+                     "Binary object: coercing write value to ENUMERATED (%u)",
+                     enum_val);
+    }
+
     *head = bacnet_write_access_data_add (*head,
                                          attrs->type, attrs->property, attrs->instance,
                                          attrs->index, value, priority);
